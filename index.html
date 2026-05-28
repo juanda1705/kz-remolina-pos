@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KZ REMOLINA 24H</title>
+    <link class="favicon" rel="icon" type="image/png" href="logo1.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Suavizado de scrollbar estilo iOS */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #ffffff; }
+        ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-white text-black font-sans min-h-screen flex flex-col pb-24 antialiased">
+
+    <header class="bg-white/90 backdrop-blur-md px-5 py-3 shadow-sm border-b border-gray-100 sticky top-0 z-50 flex justify-between items-center">
+        <div class="space-y-0.5">
+            <h1 class="text-xl font-extrabold tracking-tight text-gray-900 flex items-center gap-1.5">
+                <span class="text-red-600">KZ</span> REMOLINA 24H
+            </h1>
+            <div id="status-conexion" class="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 mt-1">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
+            </div>
+        </div>
+        <img src="logo1.png" alt="Isotipo KZ Remolina" class="h-12 w-12 object-contain rounded-full">
+    </header>
+
+    <main class="flex-1 p-5 max-w-md mx-auto w-full space-y-6">
+        
+        <div id="alerta-turno" class="bg-white border border-red-100 p-5 rounded-2xl text-center space-y-4 shadow-md shadow-red-100/50">
+            <div class="flex justify-center text-red-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <p class="text-red-600 font-bold text-sm tracking-tight">No hay ningún turno abierto actualmente.</p>
+            <div class="flex gap-2">
+                <input type="number" id="base-turno" placeholder="Dinero base en caja ($)" class="flex-1 bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm text-black focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all shadow-inner">
+                <button onclick="abrirTurno()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-xl text-sm transition-all shadow-sm active:scale-95">
+                    Abrir Turno
+                </button>
+            </div>
+        </div>
+
+        <section id="tab-ventas" class="space-y-6 pointer-events-none opacity-30 transition-opacity duration-300">
+            <div class="space-y-3">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">1. Menú Digital (Toca para agregar)</h2>
+                <div id="categorias-container" class="space-y-3"></div>
+            </div>
+
+            <div class="space-y-4 pt-2">
+                <div class="flex justify-between items-baseline px-1">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">2. Detalle del Pedido</h2>
+                    <button onclick="vaciarCarrito()" class="text-xs font-bold text-red-600 hover:text-red-800 transition">Vaciar Todo</button>
+                </div>
+                
+                <div class="bg-white rounded-2xl border border-gray-100 p-2 shadow-sm shadow-gray-200/80">
+                    <div id="elementos-carrito" class="space-y-1 max-h-56 overflow-y-auto divide-y divide-gray-100 px-2">
+                        <p class="text-sm text-gray-400 text-center py-6 font-medium">El carrito está vacío</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Notas / Observaciones</label>
+                    <input type="text" id="notas-input" class="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-black text-sm focus:ring-4 focus:ring-red-500/5 focus:border-red-500 focus:outline-none transition-all" placeholder="Ej: Sin cebolla, salsas aparte...">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Método de Pago</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl cursor-pointer border border-gray-200 select-none font-bold text-sm transition-all has-[:checked]:bg-black has-[:checked]:text-white has-[:checked]:border-black text-gray-700 shadow-sm gap-1">
+                            <input type="radio" name="pago" value="Efectivo" checked class="hidden"> 
+                            <svg class="w-5 h-5 text-red-600 parent-checked:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Efectivo</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl cursor-pointer border border-gray-200 select-none font-bold text-sm transition-all has-[:checked]:bg-black has-[:checked]:text-white has-[:checked]:border-black text-gray-700 shadow-sm gap-1">
+                            <input type="radio" name="pago" value="Transferencia" class="hidden"> 
+                            <svg class="w-5 h-5 text-red-600 parent-checked:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            <span>Transf.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="enviarVenta()" id="btn-registrar" disabled class="w-full bg-gray-100 text-gray-400 font-bold p-4 rounded-xl shadow-inner text-base cursor-not-allowed flex justify-between items-center transition-all">
+                    <span>REGISTRAR VENTA</span>
+                    <span id="total-carrito-btn" class="font-extrabold text-lg text-red-600">$0</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-reportes" class="hidden space-y-6">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10m9-10V4a2 2 0 00-2-2h-2a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 002-2zm0 0V6a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Control de Caja
+                    </h2>
+                    <button id="btn-cerrar-turno" onclick="cerrarTurno()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm hidden">Cerrar Turno</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold mb-1 uppercase px-1">Hora Inicio</label>
+                        <input type="time" id="hora-inicio" value="00:00" class="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-sm text-black focus:outline-none focus:border-black">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold mb-1 uppercase px-1">Hora Fin</label>
+                        <input type="time" id="hora-fin" value="23:59" class="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-sm text-black focus:outline-none focus:border-black">
+                    </div>
+                </div>
+                <button onclick="cargarReportes()" class="w-full bg-black text-white font-bold p-3.5 rounded-xl transition text-sm shadow-md active:scale-95">
+                    Calcular Métricas Rango
+                </button>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Efectivo en Caja</p>
+                        <p id="total-efectivo" class="text-xl font-bold text-black mt-0.5">$0</p>
+                    </div>
+                    <div class="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Transferencias</p>
+                        <p id="total-transf" class="text-xl font-bold text-black mt-0.5">$0</p>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-red-600 rounded-2xl text-center shadow-md shadow-red-600/20">
+                    <p class="text-xs text-white/90 uppercase font-bold tracking-widest">Arqueo Estimado (Base + Efectivo)</p>
+                    <p id="total-arqueo" class="text-3xl font-black text-white mt-1">$0</p>
+                </div>
+
+                <div class="p-4 bg-white rounded-2xl border border-gray-100 space-y-2 shadow-sm">
+                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A8 8 0 0117.657 18.657z"/></svg>
+                        Los 3 Más Vendidos
+                    </p>
+                    <ol id="top-productos" class="text-sm space-y-1.5 text-black list-decimal pl-4 font-semibold">
+                        <span class="text-xs text-gray-400">Calculando top...</span>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-admin" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-md">
+                <h2 class="text-base font-bold text-black flex items-center gap-1.5">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Agregar Nuevo Producto
+                </h2>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nombre</label>
+                    <input type="text" id="admin-nombre" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-black focus:outline-none focus:border-black" placeholder="Ej: Perro Suizo">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Precio ($)</label>
+                    <input type="number" id="admin-precio" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-black focus:outline-none focus:border-black" placeholder="Ej: 14000">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Categoría</label>
+                    <select id="admin-categoria" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-black focus:outline-none focus:border-black">
+                        <option value="Comidas Rápidas">🍔 Platos</option>
+                        <option value="Bebidas">🥤 Bebidas</option>
+                        <option value="Acompañados">🍟 Acompañamientos</option>
+                    </select>
+                </div>
+                <button onclick="agregarProducto()" class="w-full bg-black text-white font-bold p-3.5 rounded-xl transition shadow-md active:scale-95">
+                    Guardar Producto
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Eliminar Productos
+                </h2>
+                <div class="bg-white rounded-2xl border border-gray-100 p-2 shadow-sm">
+                    <div id="lista-eliminar" class="divide-y divide-gray-100 px-2"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="bg-white/90 backdrop-blur-md border-t border-gray-100 fixed bottom-0 left-0 right-0 h-20 flex items-center justify-around z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] pb-4">
+        <button onclick="cambiarTab('ventas')" class="flex flex-col items-center justify-center text-red-600 transition-colors group" id="nav-ventas">
+            <svg class="w-6 h-6 mb-0.5 current-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span class="text-[11px] font-bold">Vender</span>
+        </button>
+        <button onclick="cambiarTab('reportes')" class="flex flex-col items-center justify-center text-gray-400 transition-colors group" id="nav-reportes">
+            <svg class="w-6 h-6 mb-0.5 current-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10m9-10V4a2 2 0 00-2-2h-2a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 002-2zm0 0V6a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span class="text-[11px] font-bold">Reportes</span>
+        </button>
+        <button onclick="cambiarTab('admin')" class="flex flex-col items-center justify-center text-gray-400 transition-colors group" id="nav-admin">
+            <svg class="w-6 h-6 mb-0.5 current-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="text-[11px] font-bold">Admin</span>
+        </button>
+    </nav>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyccy0F2c-91XwXW4W-jj_OxZPDGA4HUHbT8gg-oqw1NW9zWv9ZYRvKU44l81U_qNWXg/exec';
+
+        const productosPorDefecto = [
+            { id: 1, nombre: 'Hamburguesa', precio: 12000, categoria: 'Comidas Rápidas' },
+            { id: 2, nombre: 'Perro Caliente', precio: 10000, categoria: 'Comidas Rápidas' },
+            { id: 3, nombre: 'Papas Fritas', precio: 6000, categoria: 'Acompañados' },
+            { id: 4, nombre: 'Gaseosa', precio: 3500, categoria: 'Bebidas' }
+        ];
+
+        let productos = JSON.parse(localStorage.getItem('pos_productos')) || productosPorDefecto;
+        let carrito = [];
+
+        // --- GESTIÓN DE TURNOS ---
+        function verificarTurno() {
+            const turno = JSON.parse(localStorage.getItem('turno_activo'));
+            const panelVentas = document.getElementById('tab-ventas');
+            const alertaTurno = document.getElementById('alerta-turno');
+            const btnCerrar = document.getElementById('btn-cerrar-turno');
+
+            if (turno) {
+                panelVentas.classList.remove('pointer-events-none', 'opacity-30');
+                alertaTurno.classList.add('hidden');
+                btnCerrar.classList.remove('hidden');
+            } else {
+                panelVentas.classList.add('pointer-events-none', 'opacity-30');
+                alertaTurno.className = 'bg-white border border-red-100 p-5 rounded-2xl text-center space-y-4 shadow-md shadow-red-100/50';
+                btnCerrar.classList.add('hidden');
+            }
+        }
+
+        function abrirTurno() {
+            const base = parseFloat(document.getElementById('base-turno').value);
+            if (isNaN(base) || base < 0) { alert("Base no válida."); return; }
+            localStorage.setItem('turno_activo', JSON.stringify({ base: base, hora_apertura: new Date().toISOString() }));
+            verificarTurno();
+        }
+
+        function cerrarTurno() {
+            if (confirm("¿Cerrar el turno actual?")) {
+                localStorage.removeItem('turno_activo');
+                verificarTurno();
+                cambiarTab('ventas');
+            }
+        }
+
+        // --- LÓGICA DEL CARRITO MULTI-PRODUCTO ---
+        function agregarAlCarrito(nombre, precio) {
+            const itemExistente = carrito.find(item => item.nombre === nombre);
+            if (itemExistente) {
+                itemExistente.cantidad++;
+            } else {
+                carrito.push({ nombre: nombre, precio: precio, opacity: 1, cantidad: 1 });
+            }
+            renderCarrito();
+        }
+
+        function modificarCantidadCarrito(nombre, cambio) {
+            const item = carrito.find(item => item.nombre === nombre);
+            if (!item) return;
+            item.cantidad += cambio;
+            if (item.cantidad <= 0) {
+                carrito = carrito.filter(i => i.nombre !== nombre);
+            }
+            renderCarrito();
+        }
+
+        function vaciarCarrito() {
+            carrito = [];
+            renderCarrito();
+        }
+
+        function renderCarrito() {
+            const container = document.getElementById('elementos-carrito');
+            const btnRegistrar = document.getElementById('btn-registrar');
+            const totalBtn = document.getElementById('total-carrito-btn');
+            
+            if (carrito.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-400 text-center py-6 font-medium">El carrito está vacío</p>`;
+                totalBtn.innerText = "$0";
+                totalBtn.className = "font-extrabold text-lg text-red-600";
+                btnRegistrar.disabled = true;
+                btnRegistrar.className = 'w-full bg-gray-100 text-gray-400 font-bold p-4 rounded-xl shadow-inner text-base cursor-not-allowed flex justify-between items-center transition-all';
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = carrito.map(item => {
+                const subtotalItem = item.precio * item.cantidad;
+                total += subtotalItem;
+                return `
+                    <div class="flex justify-between items-center py-3.5 text-sm transition-all">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <p class="text-black font-bold truncate">${item.nombre}</p>
+                            <p class="text-xs text-gray-400 font-semibold">$${item.precio.toLocaleString()} c/u</p>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <button onclick="modificarCantidadCarrito('${item.nombre}', -1)" class="bg-gray-100 active:bg-gray-200 text-black w-8 h-8 rounded-full font-bold text-center text-lg transition shadow-sm border border-gray-200">-</button>
+                            <span class="w-5 text-center font-bold text-black">${item.cantidad}</span>
+                            <button onclick="modificarCantidadCarrito('${item.nombre}', 1)" class="bg-gray-100 active:bg-gray-200 text-black w-8 h-8 rounded-full font-bold text-center text-lg transition shadow-sm border border-gray-200">+</button>
+                            <span class="w-20 text-right font-extrabold text-red-600 text-sm">$${subtotalItem.toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalBtn.innerText = `$${total.toLocaleString()}`;
+            totalBtn.className = "font-black text-xl text-white";
+            btnRegistrar.disabled = false;
+            btnRegistrar.className = 'w-full bg-red-600 text-white font-bold p-4 rounded-xl shadow-md shadow-red-600/20 text-base hover:bg-red-700 active:scale-95 flex justify-between items-center transition-all cursor-pointer';
+        }
+
+        // --- ENVIAR PEDIDO COMPLETO ---
+        async function enviarVenta() {
+            const btn = document.getElementById('btn-registrar');
+            const metodoPago = document.querySelector('input[name="pago"]:checked').value;
+            const notas = document.getElementById('notas-input').value.trim();
+            
+            let totalGeneral = carrito.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
+            let stringProductos = carrito.map(i => `${i.cantidad}x ${i.nombre}`).join(', ');
+
+            const datos = {
+                producto: stringProductos, 
+                precio: totalGeneral,      
+                metodo_pago: metodoPago,
+                cantidad: 1,               
+                observaciones: notas || "Ninguna"
+            };
+
+            btn.innerHTML = `<span>ENVIANDO...</span> <span class="text-white/80 font-bold">Espere</span>`;
+            btn.disabled = true;
+            btn.className = 'w-full bg-black text-white font-bold p-4 rounded-xl shadow-sm text-base cursor-not-allowed flex justify-between items-center';
+
+            guardarVentaLocal(datos);
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                alert("✅ Pedido completo registrado en la nube");
+            } catch (error) {
+                let cola = JSON.parse(localStorage.getItem('cola_offline')) || [];
+                cola.push(datos);
+                localStorage.setItem('cola_offline', JSON.stringify(cola));
+                alert("📶 Guardado en la memoria del teléfono (Offline). Se subirá al recuperar señal.");
+                actualizarIndicadorConexion(false);
+            }
+
+            vaciarCarrito();
+            document.getElementById('notas-input').value = "";
+        }
+
+        function guardarVentaLocal(venta) {
+            let historial = JSON.parse(localStorage.getItem('historial_local_hoy')) || [];
+            venta.fecha = new Date().toISOString();
+            historial.push(venta);
+            localStorage.setItem('historial_local_hoy', JSON.stringify(historial));
+        }
+
+        // --- PROCESADOR COLA OFFLINE ---
+        async function procesarColaOffline() {
+            let cola = JSON.parse(localStorage.getItem('cola_offline')) || [];
+            if (cola.length === 0) { actualizarIndicadorConexion(true); return; }
+            actualizarIndicadorConexion(false);
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cola[0])
+                });
+                cola.shift();
+                localStorage.setItem('cola_offline', JSON.stringify(cola));
+                procesarColaOffline();
+            } catch (e) { console.log("Offline..."); }
+        }
+        setInterval(procesarColaOffline, 15000);
+
+        function actualizarIndicadorConexion(online) {
+            const ind = document.getElementById('status-conexion');
+            if(online) {
+                ind.className = "inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 mt-1";
+                ind.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online`;
+            } else {
+                const len = (JSON.parse(localStorage.getItem('cola_offline')) || []).length;
+                ind.className = "inline-flex items-center gap-1 text-[11px] bg-red-50 text-red-600 px-2.5 py-0.5 rounded-full font-semibold border border-red-200 mt-1";
+                ind.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-red-500"></span> Offline (${len} pnd)`;
+            }
+        }
+
+        // --- REPORTES Y TOP PRODUCTOS ---
+        async function cargarReportes() {
+            const displayEfectivo = document.getElementById('total-efectivo');
+            const displayTransf = document.getElementById('total-transf');
+            const displayArqueo = document.getElementById('total-arqueo');
+            const topList = document.getElementById('top-productos');
+
+            displayEfectivo.innerText = "..."; displayTransf.innerText = "...";
+            displayArqueo.innerText = "CARGANDO..."; topList.innerHTML = "Calculando...";
+
+            let ventas = [];
+            try {
+                const response = await fetch(WEB_APP_URL);
+                ventas = await response.json();
+            } catch (e) {
+                ventas = JSON.parse(localStorage.getItem('historial_local_hoy')) || [];
+            }
+
+            const horaInicioStr = document.getElementById('hora-inicio').value;
+            const horaFinStr = document.getElementById('hora-fin').value;
+            const hoyStr = new Date().toDateString();
+
+            const [hInicio, mInicio] = horaInicioStr.split(':');
+            const [hFin, mFin] = horaFinStr.split(':');
+            const limiteInicio = new Date(); limiteInicio.setHours(parseInt(hInicio), parseInt(mInicio), 0, 0);
+            const limiteFin = new Date(); limiteFin.setHours(parseInt(hFin), parseInt(mFin), 59, 999);
+
+            let efc = 0, trf = 0;
+            let conteoProductos = {};
+
+            ventas.forEach(v => {
+                const fechaVenta = new Date(v.fecha);
+                if (fechaVenta.toDateString() === hoyStr && fechaVenta >= limiteInicio && fechaVenta <= limiteFin) {
+                    const totalVenta = parseFloat(v.precio) || 0;
+                    if (v.metodo_pago === 'Efectivo') efc += totalVenta;
+                    if (v.metodo_pago === 'Transferencia') trf += totalVenta;
+
+                    const partes = v.producto.split(', ');
+                    partes.forEach(p => {
+                        const match = p.match(/^(\d+)x\s+(.+)$/);
+                        if (match) {
+                            const cant = parseInt(match[1]);
+                            const name = match[2];
+                            conteoProductos[name] = (conteoProductos[name] || 0) + cant;
+                        } else {
+                            conteoProductos[v.producto] = (conteoProductos[v.producto] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            const turno = JSON.parse(localStorage.getItem('turno_activo'));
+            const dineroBase = turno ? turno.base : 0;
+
+            displayEfectivo.innerText = `$${efc.toLocaleString()}`;
+            displayTransf.innerText = `$${trf.toLocaleString()}`;
+            displayArqueo.innerText = `$${(dineroBase + efc).toLocaleString()}`;
+
+            const topOrdenado = Object.entries(conteoProductos).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            topList.innerHTML = topOrdenado.length === 0 ? "No hay ventas." : 
+                topOrdenado.map(([prod, cant]) => `<li><span class="font-bold text-gray-900">${prod}</span> <span class="text-red-600 font-extrabold text-xs ml-1">(${cant} unds)</span></li>`).join('');
+        }
+
+        // --- NAVEGACIÓN ---
+        function cambiarTab(tab) {
+            document.getElementById('tab-ventas').classList.add('hidden');
+            document.getElementById('tab-reportes').classList.add('hidden');
+            document.getElementById('tab-admin').classList.add('hidden');
+            
+            document.getElementById('nav-ventas').className = 'flex flex-col items-center justify-center text-gray-400 transition-colors';
+            document.getElementById('nav-reportes').className = 'flex flex-col items-center justify-center text-gray-400 transition-colors';
+            document.getElementById('nav-admin').className = 'flex flex-col items-center justify-center text-gray-400 transition-colors';
+
+            if(tab === 'ventas') {
+                document.getElementById('tab-ventas').classList.remove('hidden');
+                document.getElementById('nav-ventas').className = 'flex flex-col items-center justify-center text-red-600 transition-colors';
+            } else if(tab === 'reportes') {
+                document.getElementById('tab-reportes').classList.remove('hidden');
+                document.getElementById('nav-reportes').className = 'flex flex-col items-center justify-center text-red-600 transition-colors';
+                cargarReportes();
+            } else if(tab === 'admin') {
+                document.getElementById('tab-admin').classList.remove('hidden');
+                document.getElementById('nav-admin').className = 'flex flex-col items-center justify-center text-red-600 transition-colors';
+                renderAdminList();
+            }
+        }
+
+        // --- RENDERIZADO DEL MENÚ ---
+        function renderMenu() {
+            const container = document.getElementById('categorias-container');
+            container.innerHTML = "";
+            const categorias = [...new Set(productos.map(p => p.categoria))];
+            
+            categorias.forEach(cat => {
+                const prodsDeCat = productos.filter(p => p.categoria === cat);
+                const catId = cat.replace(/\s+/g, '-').toLowerCase();
+                const section = document.createElement('div');
+                section.className = "bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm shadow-gray-200/60";
+                section.innerHTML = `
+                    <button onclick="toggleCategoria('${catId}')" class="w-full bg-gray-50/80 p-4 font-bold text-left flex justify-between items-center text-gray-800 text-sm border-b border-gray-100">
+                        <span>${cat} <span class="text-red-600 ml-1">(${prodsDeCat.length})</span></span><span id="arrow-${catId}" class="text-xs text-gray-400">▼</span>
+                    </button>
+                    <div id="body-${catId}" class="hidden p-3.5 bg-white grid grid-cols-2 gap-3">
+                        ${prodsDeCat.map(p => `
+                            <button onclick="agregarAlCarrito('${p.nombre}', ${p.precio})" class="bg-gray-50/50 hover:bg-red-50/30 active:scale-95 p-3.5 rounded-xl border border-gray-100 flex flex-col justify-between h-20 transition-all text-left shadow-sm shadow-gray-100">
+                                <span class="truncate text-sm font-bold text-gray-900">${p.nombre}</span>
+                                <span class="text-sm font-extrabold text-red-600">$${p.precio.toLocaleString()}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        function toggleCategoria(id) {
+            const el = document.getElementById(`body-${id}`);
+            const arrow = document.getElementById(`arrow-${id}`);
+            el.classList.toggle('hidden');
+            arrow.innerText = el.classList.contains('hidden') ? "▼" : "▲";
+        }
+
+        // --- ADMIN COMPONENTE ---
+        function agregarProducto() {
+            const nombre = document.getElementById('admin-nombre').value.trim();
+            const precio = parseFloat(document.getElementById('admin-precio').value);
+            const categoria = document.getElementById('admin-categoria').value;
+
+            if(!nombre || isNaN(precio)) return;
+            productos.push({ id: Date.now(), nombre: nombre, precio: precio, categoria: categoria });
+            localStorage.setItem('pos_productos', JSON.stringify(productos));
+            document.getElementById('admin-nombre').value = "";
+            document.getElementById('admin-precio').value = "";
+            alert("✅ Producto añadido con éxito");
+            renderMenu();
+        }
+
+        function eliminarProducto(id) {
+            if(confirm("¿Eliminar este producto permanentemente?")) {
+                productos = productos.filter(p => p.id !== id);
+                localStorage.setItem('pos_productos', JSON.stringify(productos));
+                renderMenu(); renderAdminList();
+            }
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('lista-eliminar');
+            list.innerHTML = "";
+            productos.forEach(p => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center py-3 text-sm border-b border-gray-100 last:border-0";
+                item.innerHTML = `
+                <div>
+                    <span class="font-bold text-gray-900">${p.nombre}</span>
+                    <span class="text-red-600 font-bold block text-xs mt-0.5">$${p.precio.toLocaleString()}</span>
+                </div>
+                <button onclick="eliminarProducto(${p.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm">Borrar</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        renderMenu();
+        verificarTurno();
+    </script>
+</body>
+</html>
