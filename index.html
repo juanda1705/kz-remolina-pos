@@ -66,9 +66,28 @@
         <!-- SECCIÓN VENTAS -->
         <section id="tab-ventas" class="space-y-6 pointer-events-none opacity-30 transition-opacity duration-300">
 
-            <div class="space-y-3">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">1. Menú Digital (Toca para agregar)</h2>
-                <div id="categorias-container" class="space-y-3"></div>
+            <!-- BUSCADOR PREDICTIVO -->
+            <div class="space-y-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">1. Menú Digital</h2>
+                <div class="relative">
+                    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/></svg>
+                    <input
+                        type="text"
+                        id="buscador-menu"
+                        oninput="filtrarMenu(this.value)"
+                        onfocus="filtrarMenu(this.value)"
+                        placeholder="Buscar por nombre o código (#61, 'per'…)"
+                        autocomplete="off"
+                        class="w-full bg-gray-50 border border-gray-200 pl-10 pr-10 py-3 rounded-xl text-sm text-black font-medium placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all shadow-inner"
+                    >
+                    <button id="btn-limpiar-busqueda" onclick="limpiarBusqueda()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <!-- Resultados del buscador -->
+                <div id="resultados-busqueda" class="hidden"></div>
+                <!-- Cuadrícula completa (estado inicial / sin búsqueda) -->
+                <div id="catalogo-completo"></div>
             </div>
 
             <div class="space-y-4 pt-2">
@@ -710,45 +729,77 @@
         if (tab === 'admin')    renderAdminList();
     }
 
-    // ─── MENÚ ─────────────────────────────────────────────────────────────────────
+    // ─── MENÚ / BUSCADOR PREDICTIVO ──────────────────────────────────────────────
+    // Genera el HTML de un botón de producto (reutilizado en catálogo y resultados)
+    function htmlBotonProducto(p) {
+        const n = p.nombre.replace(/'/g, "\\'");
+        return `<button onclick="agregarAlCarrito('${p.codigo}','${n}',${p.precio})"
+            class="bg-gray-50 active:scale-95 active:bg-red-50 p-3 rounded-xl border border-gray-100 flex flex-col justify-between h-[72px] transition-all text-left shadow-sm">
+            <div class="flex items-start justify-between w-full gap-1">
+                <span class="text-sm font-bold text-gray-900 leading-tight line-clamp-2 flex-1">${p.nombre}</span>
+                <span class="text-[9px] bg-gray-200 text-gray-500 font-black px-1.5 py-0.5 rounded font-mono shrink-0 mt-0.5">#${p.codigo}</span>
+            </div>
+            <span class="text-sm font-extrabold text-red-600">$${p.precio.toLocaleString()}</span>
+        </button>`;
+    }
+
+    // Renderiza el catálogo completo agrupado por categoría (estado inicial, sin query)
     function renderMenu() {
-        const container = document.getElementById('categorias-container');
-        container.innerHTML = '';
+        const catalogo = document.getElementById('catalogo-completo');
+        catalogo.innerHTML = '';
+
         const catsConProds = ORDEN_CATEGORIAS.filter(c => productos.some(p => p.categoria === c));
         const catsExtra    = [...new Set(productos.map(p => p.categoria))].filter(c => !ORDEN_CATEGORIAS.includes(c));
-        const cats         = [...catsConProds, ...catsExtra];
 
-        cats.forEach(cat => {
+        [...catsConProds, ...catsExtra].forEach(cat => {
             const prods = productos.filter(p => p.categoria === cat).sort((a,b) => parseInt(a.codigo) - parseInt(b.codigo));
-            const catId = cat.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-            const section = document.createElement('div');
-            section.className = 'bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm shadow-gray-200/60';
-            section.innerHTML = `
-                <button onclick="toggleCategoria('${catId}')" class="w-full bg-gray-50/80 p-4 font-bold text-left flex justify-between items-center text-gray-800 text-sm border-b border-gray-100">
-                    <span>${cat} <span class="text-red-600 ml-1">(${prods.length})</span></span>
-                    <span id="arrow-${catId}" class="text-xs text-gray-400">▼</span>
-                </button>
-                <div id="body-${catId}" class="hidden p-3.5 bg-white grid grid-cols-2 gap-3">
-                    ${prods.map(p => `
-                        <button onclick="agregarAlCarrito('${p.codigo}','${p.nombre.replace(/'/g,"\\'")}',${p.precio})"
-                            class="bg-gray-50/50 hover:bg-red-50/30 active:scale-95 p-3.5 rounded-xl border border-gray-100 flex flex-col justify-between h-20 transition-all text-left shadow-sm shadow-gray-100">
-                            <div class="flex items-start justify-between w-full gap-1">
-                                <span class="truncate text-sm font-bold text-gray-900 flex-1">${p.nombre}</span>
-                                <span class="text-[10px] bg-gray-200 text-gray-500 font-black px-1.5 py-0.5 rounded font-mono shrink-0">#${p.codigo}</span>
-                            </div>
-                            <span class="text-sm font-extrabold text-red-600">$${p.precio.toLocaleString()}</span>
-                        </button>
-                    `).join('')}
-                </div>`;
-            container.appendChild(section);
+            const sec = document.createElement('div');
+            sec.className = 'space-y-2';
+            sec.innerHTML = `
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 px-0.5">${cat}</p>
+                <div class="grid grid-cols-2 gap-2">${prods.map(htmlBotonProducto).join('')}</div>`;
+            catalogo.appendChild(sec);
         });
     }
 
-    function toggleCategoria(id) {
-        const el = document.getElementById(`body-${id}`);
-        const arrow = document.getElementById(`arrow-${id}`);
-        el.classList.toggle('hidden');
-        arrow.innerText = el.classList.contains('hidden') ? '▼' : '▲';
+    // Filtrado en tiempo real: por código (prefijo numérico) o nombre (substring)
+    function filtrarMenu(query) {
+        const q           = query.trim().toLowerCase();
+        const resultados  = document.getElementById('resultados-busqueda');
+        const catalogo    = document.getElementById('catalogo-completo');
+        const btnLimpiar  = document.getElementById('btn-limpiar-busqueda');
+
+        if (!q) {
+            resultados.classList.add('hidden');
+            resultados.innerHTML = '';
+            catalogo.classList.remove('hidden');
+            btnLimpiar.classList.add('hidden');
+            return;
+        }
+
+        btnLimpiar.classList.remove('hidden');
+        catalogo.classList.add('hidden');
+
+        const matches = productos.filter(p =>
+            p.codigo.startsWith(q) ||
+            p.nombre.toLowerCase().includes(q) ||
+            String(parseInt(p.codigo)).startsWith(q)   // permite "6" → muestra 61,62,63
+        ).sort((a,b) => parseInt(a.codigo) - parseInt(b.codigo));
+
+        if (matches.length === 0) {
+            resultados.innerHTML = `<p class="text-sm text-gray-400 text-center py-8 font-medium">Sin resultados para "<span class="font-bold text-gray-600">${query}</span>"</p>`;
+        } else {
+            resultados.innerHTML = `<div class="grid grid-cols-2 gap-2">${matches.map(htmlBotonProducto).join('')}</div>`;
+        }
+
+        resultados.classList.remove('hidden');
+    }
+
+    function limpiarBusqueda() {
+        const input = document.getElementById('buscador-menu');
+        input.value = '';
+        input.focus();
+        filtrarMenu('');
     }
 
     // ─── ADMIN ───────────────────────────────────────────────────────────────────
