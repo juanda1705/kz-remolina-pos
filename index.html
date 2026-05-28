@@ -76,7 +76,7 @@
                         id="buscador-menu"
                         oninput="filtrarMenu(this.value)"
                         onfocus="filtrarMenu(this.value)"
-                        placeholder="Buscar por nombre o código (#61, 'per'…)"
+                        placeholder="Buscar por nombre o código"
                         autocomplete="off"
                         class="w-full bg-gray-50 border border-gray-200 pl-10 pr-10 py-3 rounded-xl text-sm text-black font-medium placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all shadow-inner"
                     >
@@ -87,7 +87,7 @@
                 <!-- Resultados del buscador -->
                 <div id="resultados-busqueda" class="hidden"></div>
                 <!-- Cuadrícula completa (estado inicial / sin búsqueda) -->
-                <div id="catalogo-completo"></div>
+                <div id="catalogo-completo" class="hidden"></div>
             </div>
 
             <div class="space-y-4 pt-2">
@@ -772,7 +772,7 @@
         if (!q) {
             resultados.classList.add('hidden');
             resultados.innerHTML = '';
-            catalogo.classList.remove('hidden');
+            catalogo.classList.add('hidden');
             btnLimpiar.classList.add('hidden');
             return;
         }
